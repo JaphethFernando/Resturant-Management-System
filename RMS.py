@@ -1,5 +1,8 @@
+#deque is used to create a queue of orders and a priority queue for orders of "Lobster Thermidor" and "Steak Diane".
+#Counter is used to calculate the most popular items ordered by customers.
 from collections import deque, Counter
 
+#tables is a dictionary with keys table_number and values data.
 tables = {
     table_number: {
         "status": "free",
@@ -11,8 +14,11 @@ tables = {
     for table_number in range(1, 6)  
 }
 
+#order_queue and priority_queue are deques to store the orders.
+#menu is a dictionary with keys as the name of the dish and values as the price of the dish.
+#order_summary is a Counter to store the number of times each item is ordered.
 order_queue = deque()
-priority_order_queue = deque()
+priority_queue = deque()
 menu = { 
     "House Cured Bourbon Gravadlax": 9.99,
     "Bloc de Pate": 14.99,
@@ -37,13 +43,20 @@ menu = {
 
 order_summary = Counter() 
 
+#Prints the status (free/occupied) of each table.
+#table_number is the key and data is the value of the dictionary.
+#data is a dictionary with keys "status", "orders", "bill", "tip", and "payment_method".
 def display_table_availability():
     for table_number, data in tables.items():
         print(f"Table {table_number}: {data['status']}")
 
+#Checks if a table is free or occupied.
+#table_number is the key and data is the value of the dictionary.
+#status is the value of the key "status" in the dictionary data.
 def is_table_free(table_number):
     return tables[table_number]["status"] == "free"
 
+#Books a table if it is free.
 def book_table(table_number):
     if is_table_free(table_number):
         tables[table_number]["status"] = "occupied"
@@ -51,6 +64,8 @@ def book_table(table_number):
     else:
         print(f"Sorry, table {table_number} is already occupied.")
 
+#Frees a table if it is occupied.
+#if not is_table_free(table_number): checks if the table is occupied. If it is, the status of the table is changed to "free" and intializes the orders, bill, and tip to 0.
 def free_table(table_number):
     if not is_table_free(table_number):
         tables[table_number]["status"] = "free"
@@ -61,13 +76,18 @@ def free_table(table_number):
     else:
         print(f"Table {table_number} is already free.")
 
+#Takes an order for a table if it is occupied.
+#items is a list of items ordered by the customer.
+#ordered items are added to the orders list of the table and the order is added to the order_queue or priority_queue based on the item.
+#If the item is "Lobster Thermidor" or "Steak Diane", it is added to the priority_queue. Otherwise, it is added to the order_queue.
+
 def take_order(table_number, items):
     if not is_table_free(table_number):
         for item in items:
             if item in menu:
                 tables[table_number]["orders"].append(item)
                 if item in ["Lobster Thermidor", "Steak Diane"]:
-                    priority_order_queue.appendleft((table_number, item)) 
+                    priority_queue.appendleft((table_number, item)) 
                 else:
                     order_queue.append((table_number, item)) 
                 print(f"{item} added to the order for table {table_number}.")
@@ -76,9 +96,11 @@ def take_order(table_number, items):
     else:
         print(f"Table {table_number} is not occupied.")
 
+#Processes the next order in the priority_queue or order_queue.
+#If the priority_queue is not empty, the order is taken from the priority_queue.
 def process_order():
-    if priority_order_queue:
-        table_number, item = priority_order_queue.popleft()
+    if priority_queue:
+        table_number, item = priority_queue.popleft()
     elif order_queue:
         table_number, item = order_queue.popleft()
     else:
@@ -88,6 +110,9 @@ def process_order():
     print(f"\nProcessing order for table {table_number}: {item}")
     print(f"{item} is ready for table {table_number}!")
 
+#Calculates the bill for a table if it is occupied.
+#subtotal is the sum of the prices of the items ordered by the customer.
+#If the payment method is "card", the subtotal is increased by 10%.
 def calculate_bill(table_number):
     if not is_table_free(table_number):
         subtotal = sum(menu[item] for item in tables[table_number]["orders"])
@@ -99,7 +124,9 @@ def calculate_bill(table_number):
         print(f"Table {table_number} is not occupied.")
         return 0
 
-
+#Closes a table if it is occupied.
+#bill is the total bill for the table, tip is the tip amount entered by the user, and payment_method is the payment method entered by the user.
+#The bill is calculated using the calculate_bill function and the tip is added to the bill.
 def close_table(table_number):
     if not is_table_free(table_number):
         bill = calculate_bill(table_number)
@@ -123,7 +150,10 @@ def close_table(table_number):
     else:
         print(f"Table {table_number} is not occupied.")
 
-def generate_evening_report():
+#Generates an evening report with the total income, highest spending table, most popular items, and total tips.
+#total_income is the sum of the bills for all occupied tables,tips is the sum of the tip amounts for all occupied tables, and most_popular_items is a list of the three most popular items ordered by customers.
+#The most popular items are calculated using the Counter class from the collections module.
+def generate_report():
     total_income = sum(tables[table]["bill"] for table in tables)
     highest_spending_table = max(tables, key=lambda k: tables[k]["bill"])
     most_popular_items = order_summary.most_common(3)  
@@ -138,6 +168,7 @@ def generate_evening_report():
     print(f"Total Tips: £{total_tips:.2f}")
 
 # --- Main Program Loop ---
+#The program displays a menu with options to check table availability, book a table, free a table, take an order, process an order, close a table, generate an evening report, and exit.
 while True:
     print("\n--- Welcome to Luccio Carlo's Restaurant ---")
     print("1. Check Table Availability")
@@ -183,7 +214,7 @@ while True:
                 print("Invalid payment method. Please enter 'cash' or 'card'.")        
         close_table(table_number)  
     elif choice == '7':
-        generate_evening_report()
+        generate_report()
     elif choice == '8':
         print("Exiting...")
         break
